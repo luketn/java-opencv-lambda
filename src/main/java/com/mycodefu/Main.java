@@ -13,6 +13,7 @@ public class Main implements RequestHandler<APIGatewayV2HTTPEvent, APIGatewayV2H
 
     @Override
     public APIGatewayV2HTTPResponse handleRequest(APIGatewayV2HTTPEvent apiGatewayV2HTTPEvent, Context context) {
-        return APIGatewayV2HTTPResponse.builder().withStatusCode(200).withBody("OpenCV loaded").build();
+        System.out.println("Received request:\n" + apiGatewayV2HTTPEvent);
+        return APIGatewayV2HTTPResponse.builder().withStatusCode(200).withBody(apiGatewayV2HTTPEvent.getBody()).build();
     }
 }

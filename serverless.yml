@@ -6,7 +6,6 @@ provider:
   profile: personal
   architecture: arm64
   ecr:
-    # In this section you can define images that will be built locally and uploaded to ECR
     images:
       appimage:
         path: ./docker
@@ -16,15 +15,7 @@ plugins:
 
 functions:
   image-process:
-    events:
-      - http:
-          path: /image-process
-          method: post
-          cors: true
-          request:
-            contentHandling: CONVERT_TO_TEXT
-  #      response:
-  #        headers:
-  #          Content-Type: "'image/png'"
+    url:
+      cors: true
     image:
       name: appimage
