@@ -1,0 +1,16 @@
+{
+  "name": "java-opencv",
+  "version": "1.0.0",
+  "description": "I looked at that at first, but read that it may not be ready for C++ usage yet:",
+  "main": "index.js",
+  "scripts": {
+    "deploy": "AWS_SDK_LOAD_CONFIG=1 sls deploy",
+    "remove": "AWS_SDK_LOAD_CONFIG=1 sls remove"
+  },
+  "dependencies": {
+    "serverless": "^3.38.0",
+    "serverless-better-credentials": "^2.0.0"
+  },
+  "author": "",
+  "license": "ISC"
+}

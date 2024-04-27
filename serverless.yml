@@ -1,0 +1,30 @@
+service: java-opencv-lambda
+
+provider:
+  name: aws
+  region: ap-southeast-2
+  profile: personal
+  architecture: arm64
+  ecr:
+    # In this section you can define images that will be built locally and uploaded to ECR
+    images:
+      appimage:
+        path: ./docker
+
+plugins:
+  - serverless-better-credentials
+
+functions:
+  image-process:
+    events:
+      - http:
+          path: /image-process
+          method: post
+          cors: true
+          request:
+            contentHandling: CONVERT_TO_TEXT
+  #      response:
+  #        headers:
+  #          Content-Type: "'image/png'"
+    image:
+      name: appimage
