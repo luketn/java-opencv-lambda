@@ -15,6 +15,11 @@ class MainTest {
     @Test
     void handleRequest() throws IOException {
         APIGatewayV2HTTPResponse apiGatewayV2HTTPResponse = new Main().handleRequest(APIGatewayV2HTTPEvent.builder()
+                .withRequestContext(APIGatewayV2HTTPEvent.RequestContext.builder()
+                        .withHttp(APIGatewayV2HTTPEvent.RequestContext.Http.builder()
+                                .withMethod("POST")
+                                .build())
+                        .build())
                 .withBody(testImage)
                 .withIsBase64Encoded(true)
                 .build(), null);

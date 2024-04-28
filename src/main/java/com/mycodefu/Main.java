@@ -10,6 +10,11 @@ import org.opencv.core.MatOfByte;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.Map;
 
@@ -23,7 +28,28 @@ public class Main implements RequestHandler<APIGatewayV2HTTPEvent, APIGatewayV2H
 
     @Override
     public APIGatewayV2HTTPResponse handleRequest(APIGatewayV2HTTPEvent apiGatewayV2HTTPEvent, Context context) {
-//        System.out.println("Received request:\n" + apiGatewayV2HTTPEvent);
+        //        System.out.println("Received request:\n" + apiGatewayV2HTTPEvent);
+
+        //return cacheable options
+        String method = apiGatewayV2HTTPEvent.getRequestContext().getHttp().getMethod();
+        switch(method) {
+            case "GET":
+                String indexFile;
+                try {
+                    indexFile = Files.readString(Paths.get(getClass().getClassLoader().getResource("/index.html").toURI()));
+                } catch (IOException | URISyntaxException e) {
+                    throw new RuntimeException(e);
+                }
+                return APIGatewayV2HTTPResponse.builder()
+                        .withStatusCode(200)
+                        .withBody(indexFile)
+                        .build();
+            case "OPTIONS":
+                return APIGatewayV2HTTPResponse.builder()
+                        .withStatusCode(200)
+                        .withBody("max-age=31536000")
+                        .build();
+        }
 
         // Decode the base64 string to get image data
         byte[] imageData = Base64.getDecoder().decode(apiGatewayV2HTTPEvent.getBody());
