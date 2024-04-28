@@ -63,8 +63,6 @@
             return result;
         }
 
-        let restartCallback;
-
         async function startProcessingLoop() {
             const pauseCheckbox = document.getElementById('pause');
             const isWebcamSetup = await setupWebcam();
@@ -72,7 +70,11 @@
                 while (true) {
                     if (pauseCheckbox.checked) {
                         await new Promise((resolve) => {
-                            restartCallback = resolve;
+                            const onChange = () => {
+                                pauseCheckbox.removeEventListener('change', onChange);
+                                resolve();
+                            };
+                            pauseCheckbox.addEventListener('change', onChange);
                         });
                     } else {
                         await processFrame();
@@ -80,12 +82,6 @@
                 }
             }
         }
-
-        document.getElementById('pause').addEventListener('change', () => {
-            if (restartCallback) {
-                restartCallback();
-            }
-        });
 
         startProcessingLoop();
     </script>
