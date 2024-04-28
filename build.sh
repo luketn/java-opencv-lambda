@@ -20,7 +20,7 @@ if [ -z "$DOCKER_TAG" ]; then
   exit 1
 fi
 
-aws ecr --profile personal get-login-password --region ap-southeast-2  | docker login --username AWS --password-stdin 204244381428.dkr.ecr.ap-southeast-2.amazonaws.com
+aws ecr get-login-password --region ap-southeast-2  | docker login --username AWS --password-stdin 204244381428.dkr.ecr.ap-southeast-2.amazonaws.com
 REPOSITORY_TAG="204244381428.dkr.ecr.ap-southeast-2.amazonaws.com/java-opencv-lambda:${DOCKER_TAG}"
 REPOSITORY_TAG_LATEST="204244381428.dkr.ecr.ap-southeast-2.amazonaws.com/java-opencv-lambda:latest"
 echo "$(date): Building and pushing ${REPOSITORY_TAG}..."
