@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.Map;
@@ -36,8 +37,8 @@ public class Main implements RequestHandler<APIGatewayV2HTTPEvent, APIGatewayV2H
             case "GET":
                 String indexFile;
                 try {
-                    indexFile = Files.readString(Paths.get(getClass().getClassLoader().getResource("/index.html").toURI()));
-                } catch (IOException | URISyntaxException e) {
+                    indexFile = Files.readString(Path.of(getClass().getResource("/index.html").getPath()));
+                } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
                 return APIGatewayV2HTTPResponse.builder()
