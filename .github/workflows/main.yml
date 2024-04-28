@@ -1,11 +1,11 @@
 name: main
 
 on:
-  push:
-    branches: [ "main" ]
-    paths-ignore:
-      - 'README.md'
-      - '.gitignore'
+#  push:
+#    branches: [ "main" ]
+#    paths-ignore:
+#      - 'README.md'
+#      - '.gitignore'
   workflow_dispatch:
 
 jobs:
