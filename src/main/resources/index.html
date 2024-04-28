@@ -70,11 +70,7 @@
                 while (true) {
                     if (pauseCheckbox.checked) {
                         await new Promise((resolve) => {
-                            const onChange = () => {
-                                pauseCheckbox.removeEventListener('change', onChange);
-                                resolve();
-                            };
-                            pauseCheckbox.addEventListener('change', onChange);
+                            pauseCheckbox.onchange = resolve;
                         });
                     } else {
                         await processFrame();
