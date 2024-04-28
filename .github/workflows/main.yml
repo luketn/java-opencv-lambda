@@ -1,11 +1,11 @@
 name: main
 
 on:
-#  push:
-#    branches: [ "main" ]
-#    paths-ignore:
-#      - 'README.md'
-#      - '.gitignore'
+  push:
+    branches: [ "main" ]
+    paths-ignore:
+      - 'README.md'
+      - '.gitignore'
   workflow_dispatch:
 
 jobs:
@@ -42,11 +42,8 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Docker Image
-        run: ./build.sh
-
-      - name: Serverless Deploy
-        run: npm run deploy -- --stage dev
+      - name: Build Docker Image + Deploy
+        run: ./build-deploy.sh
 
       - name: Run Lambda Function to check it loads
         run: curl --silent --show-error --fail https://47gjxgowcrvusxmfqkprkzfr7q0ospym.lambda-url.ap-southeast-2.on.aws/

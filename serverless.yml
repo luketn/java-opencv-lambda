@@ -5,10 +5,6 @@ provider:
   region: ap-southeast-2
   profile: personal
   architecture: arm64
-  ecr:
-    images:
-      appimage:
-        path: ./docker
 
 plugins:
   - serverless-better-credentials
@@ -17,5 +13,4 @@ functions:
   image-process:
     url:
       cors: true
-    image:
-      name: appimage
+    image: "204244381428.dkr.ecr.ap-southeast-2.amazonaws.com/java-opencv-lambda:${env:DOCKER_TAG}"
