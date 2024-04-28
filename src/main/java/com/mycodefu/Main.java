@@ -44,11 +44,17 @@ public class Main implements RequestHandler<APIGatewayV2HTTPEvent, APIGatewayV2H
                 return APIGatewayV2HTTPResponse.builder()
                         .withStatusCode(200)
                         .withBody(indexFile)
+                        .withHeaders(Map.of("Content-Type", "text/html"))
                         .build();
             case "OPTIONS":
                 return APIGatewayV2HTTPResponse.builder()
                         .withStatusCode(200)
-                        .withBody("max-age=31536000")
+                        .withHeaders(Map.of(
+                                "Access-Control-Allow-Origin", "*",
+                                "Access-Control-Allow-Methods", "POST, GET, OPTIONS",
+                                "Access-Control-Allow-Headers", "*",
+                                "Access-Control-Max-Age", "86400"
+                        ))
                         .build();
         }
 
