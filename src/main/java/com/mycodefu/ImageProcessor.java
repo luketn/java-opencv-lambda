@@ -49,9 +49,10 @@ public class ImageProcessor {
         MatOfRect faceDetections = new MatOfRect();
         faceCascade.detectMultiScale(image, faceDetections);
 
-        int thickness = 3; // Specify the desired thickness of the rectangle
+        int thickness = 3;
+        Scalar magenta = new Scalar(255, 0, 255);
         for (Rect rect : faceDetections.toArray()) {
-            Imgproc.rectangle(image, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new Scalar(0, 255, 0), thickness);
+            Imgproc.rectangle(image, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), magenta, thickness);
         }
 
         return image;
