@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executors;
 
 public class LocalRunner {
@@ -23,6 +25,14 @@ public class LocalRunner {
                                         .withMethod(exchange.getRequestMethod())
                                         .build())
                                 .build());
+
+                //handle query string parameters
+                String query = exchange.getRequestURI().getQuery();
+                if (query != null) {
+                    Map<String, String> queryParameters = parseQueryString(query);
+                    eventBuilder.withQueryStringParameters(queryParameters);
+                }
+
                 byte[] body = exchange.getRequestBody().readAllBytes();
                 if (exchange.getRequestMethod().equalsIgnoreCase("POST")) {
                     String base64EncodedBody = Base64.getEncoder().encodeToString(body);
@@ -56,5 +66,18 @@ public class LocalRunner {
         server.setExecutor(Executors.newFixedThreadPool(10));
         server.start();
         System.out.println(" Server started on http://localhost:8001");
+    }
+
+
+    private static Map<String, String> parseQueryString(String query) {
+        Map<String, String> queryParameters = new HashMap<>();
+        String[] pairs = query.split("&");
+        for (String pair : pairs) {
+            int idx = pair.indexOf("=");
+            String key = idx > 0 ? pair.substring(0, idx) : pair;
+            String value = idx > 0 && pair.length() > idx + 1 ? pair.substring(idx + 1) : null;
+            queryParameters.put(key, value);
+        }
+        return queryParameters;
     }
 }

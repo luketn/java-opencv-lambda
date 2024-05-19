@@ -15,6 +15,12 @@
     <br />
     <input type="checkbox" id="pause" name="Pause" value="Pause" checked />
     <label for="pause">Pause</label>
+    <!-- dropdown for mode query string parameter with options Grayscale, GreenBlueRedSplit -->
+    <select id="mode" name="mode">
+        <option value="Grayscale">Grayscale</option>
+        <option value="GreenBlueRedSplit">Green-Blue-Red Split</option>
+    </select>
+
 
     <script>
         // Access webcam
@@ -37,7 +43,7 @@
                 const canvas = document.createElement('canvas');
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
-                console.log(`Canvas size: ${canvas.width} x ${canvas.height}`)
+                // console.log(`Canvas size: ${canvas.width} x ${canvas.height}`)
                 const context = canvas.getContext('2d');
                 context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
@@ -45,7 +51,10 @@
                 canvas.toBlob(async (blob) => {
                     // Replace 'yourWebServiceURL' with the URL of your web service
                     try {
-                        const response = await fetch('/', {
+                        //get the mode value
+                        const mode = document.getElementById('mode').value;
+                        // console.log(`Mode: ${mode}`);
+                        const response = await fetch(`/?mode=${mode}`, {
                             method: 'POST',
                             body: blob
                         });

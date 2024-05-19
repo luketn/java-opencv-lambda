@@ -25,9 +25,17 @@ public class Main implements RequestHandler<APIGatewayV2HTTPEvent, APIGatewayV2H
         String method = apiGatewayV2HTTPEvent.getRequestContext().getHttp().getMethod();
         switch(method) {
             case "POST": {
+                // Get query string parameter 'mode' as Mode
+                ImageProcessor.Mode mode;
+                Map<String, String> queryStringParameters = apiGatewayV2HTTPEvent.getQueryStringParameters();
+                if (queryStringParameters == null || !queryStringParameters.containsKey("mode")) {
+                    mode = ImageProcessor.Mode.Grayscale;
+                } else {
+                    mode = ImageProcessor.Mode.valueOf(queryStringParameters.get("mode"));
+                }
                 String encodedInputImage = apiGatewayV2HTTPEvent.getBody();
 
-                String encodedResponseImage = processImage(encodedInputImage);
+                String encodedResponseImage = processImage(encodedInputImage, mode);
 
                 return APIGatewayV2HTTPResponse.builder()
                         .withStatusCode(200)
