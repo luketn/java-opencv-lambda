@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Base64;
+import java.util.*;
 
 public class ImageProcessor {
     static {
@@ -21,6 +21,7 @@ public class ImageProcessor {
         Grayscale,
         GreenBlueRedSplit,
         FaceDetection,
+        Mandarin,
     }
 
     public static String processImage(String encodedInputImage, Mode mode) {
@@ -31,12 +32,131 @@ public class ImageProcessor {
             case Grayscale -> processGrayscale(image);
             case GreenBlueRedSplit -> processGreenBlueRedSplit(image);
             case FaceDetection -> processFaceDetection(image);
+            case Mandarin -> processMandarin(image);
         };
 
         MatOfByte matOfByte = new MatOfByte();
         Imgcodecs.imencode(".png", result, matOfByte);
         String encodedImage = Base64.getEncoder().encodeToString(matOfByte.toArray());
         return encodedImage;
+    }
+
+    private static Mat processMandarin(Mat image) {
+        // Convert the image to the HSV color space
+        Mat hsvImage = new Mat();
+        Imgproc.cvtColor(image, hsvImage, Imgproc.COLOR_BGR2HSV);
+
+        // Define a narrower range of orange color in HSV
+        Scalar lowerOrange = new Scalar(8, 150, 100);
+        Scalar upperOrange = new Scalar(18, 255, 255);
+
+        // Threshold the HSV image to get only orange colors
+        Mat mask = new Mat();
+        Core.inRange(hsvImage, lowerOrange, upperOrange, mask);
+
+        // Perform morphological operations to remove noise
+        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5));
+        Imgproc.morphologyEx(mask, mask, Imgproc.MORPH_OPEN, kernel);
+        Imgproc.morphologyEx(mask, mask, Imgproc.MORPH_CLOSE, kernel);
+
+        // Find contours of the mask
+        List<MatOfPoint> contours = new ArrayList<>();
+        Mat hierarchy = new Mat();
+        Imgproc.findContours(mask, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+
+        // Find the largest contour (assuming the mandarin is the largest orange object)
+        double maxArea = 0;
+        MatOfPoint largestContour = null;
+        for (MatOfPoint contour : contours) {
+            double area = Imgproc.contourArea(contour);
+            if (area > maxArea) {
+                maxArea = area;
+                largestContour = contour;
+            }
+        }
+
+        // If a largest contour is found, draw a circle around it
+        Point center = new Point();
+        if (largestContour != null) {
+            // Find the minimum enclosing circle of the largest contour
+            MatOfPoint2f contour2f = new MatOfPoint2f(largestContour.toArray());
+            float[] radius = new float[1];
+            Imgproc.minEnclosingCircle(contour2f, center, radius);
+
+            // Draw the circle on the original image
+            Scalar green = new Scalar(0, 255, 0);
+            Imgproc.circle(image, center, (int) radius[0], green, 2);
+        }
+
+
+
+        // Draw the legend at the top left of the image
+        int legendWidth = 100;
+        int legendHeight = 10;
+        int legendX = 5;
+        int legendY = 5;
+
+        // Create a new Mat for the legend
+        Mat legend = new Mat(legendHeight, legendWidth, CvType.CV_8UC3, new Scalar(255, 255, 255));
+
+        // Fill the legend with the range of orange colors
+        for (int i = 0; i < legendWidth; i++) {
+            double hue = lowerOrange.val[0] + (upperOrange.val[0] - lowerOrange.val[0]) * i / legendWidth;
+            Scalar color = new Scalar(hue, 255, 255);
+            Imgproc.line(legend, new Point(i, 0), new Point(i, legendHeight), color, 1);
+        }
+
+        // Convert the legend from HSV to BGR
+        Imgproc.cvtColor(legend, legend, Imgproc.COLOR_HSV2BGR);
+
+        // Add "Min" and "Max" text to the legend
+        if (largestContour != null) {
+            Scalar white = new Scalar(230, 230, 200);
+            String text = "x: " + (int) center.x + ", y: " + (int) center.y;
+            Imgproc.putText(legend, text, new Point(5, 8), Imgproc.FONT_HERSHEY_SIMPLEX, 0.3, white, 1, Imgproc.LINE_AA);
+        }
+        // Overlay the legend on the original image
+        Mat roi = image.submat(new Rect(legendX, legendY, legendWidth, legendHeight));
+        legend.copyTo(roi);
+
+
+
+        // Create a 3-column wide image
+        Mat result = new Mat(image.rows(), image.cols() * 3, CvType.CV_8UC3);
+
+        // Place the current image on the left
+        Mat leftROI = result.submat(new Rect(0, 0, image.cols(), image.rows()));
+        image.copyTo(leftROI);
+
+        // Place the orange mask in the middle
+        Mat maskColorized = new Mat();
+        Imgproc.cvtColor(mask, maskColorized, Imgproc.COLOR_GRAY2BGR);
+        Mat middleROI = result.submat(new Rect(image.cols(), 0, image.cols(), image.rows()));
+        maskColorized.copyTo(middleROI);
+
+        // Add title "Orange Mask" to the mask image
+        Scalar white = new Scalar(230, 230, 200);
+        Imgproc.putText(result, "Orange Mask", new Point(image.cols() + 5, 15),
+                Imgproc.FONT_HERSHEY_SIMPLEX, 0.4, white, 1, Imgproc.LINE_AA);
+
+        // Place the contours detected on the right
+        Mat contoursImage = Mat.zeros(image.size(), CvType.CV_8UC3);
+        Scalar orange = new Scalar(0, 165, 255);
+        for (MatOfPoint contour : contours) {
+            if (contour == largestContour) {
+                Imgproc.drawContours(contoursImage, Collections.singletonList(contour), -1, orange, 2);
+            } else {
+                Imgproc.drawContours(contoursImage, Collections.singletonList(contour), -1, white, 2);
+            }
+        }
+        Mat rightROI = result.submat(new Rect(image.cols() * 2, 0, image.cols(), image.rows()));
+        contoursImage.copyTo(rightROI);
+
+        // Add title "Contours Found" to the contours image
+        Imgproc.putText(result, "Contours Found", new Point(image.cols() * 2 + 5, 15),
+                Imgproc.FONT_HERSHEY_SIMPLEX, 0.4, white, 1, Imgproc.LINE_AA);
+
+        return result;
     }
 
     /**

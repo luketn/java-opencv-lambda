@@ -20,6 +20,7 @@
         <option value="Grayscale">Grayscale</option>
         <option value="GreenBlueRedSplit">Green-Blue-Red Split</option>
         <option value="FaceDetection">Face Detection</option>
+        <option value="Mandarin">Mandarin Detection</option>
     </select>
 
 
@@ -35,6 +36,32 @@
                 console.error('Error accessing webcam:', error);
                 return false;
             }
+        }
+        
+        async function fetchWithRetry(url, options, maxRetries = 20, backoffFactor = 0.3) {
+            let retries = 0;
+
+            while (retries < maxRetries) {
+                try {
+                    const response = await fetch(url, options);
+                    if (response.ok) {
+                        return response;
+                    }
+                    if (response.status < 500) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                } catch (error) {
+                    if (retries === maxRetries - 1) {
+                        throw error;
+                    }
+                    const backoffTime = Math.pow(2, retries) * backoffFactor;
+                    console.warn(`Retrying in ${backoffTime}s due to error: ${error.message}`);
+                    await new Promise(resolve => setTimeout(resolve, backoffTime * 1000));
+                }
+                retries++;
+            }
+
+            throw new Error(`Max retries (${maxRetries}) exceeded`);
         }
 
         // Send frame to a web service and update the processed image
@@ -55,10 +82,12 @@
                         //get the mode value
                         const mode = document.getElementById('mode').value;
                         // console.log(`Mode: ${mode}`);
-                        const response = await fetch(`/?mode=${mode}`, {
+                        const response = await fetchWithRetry(`/?mode=${mode}`, {
                             method: 'POST',
                             body: blob
                         });
+
+
                         const imageBlob = await response.blob();
                         const imageUrl = URL.createObjectURL(imageBlob);
                         document.getElementById('processed').src = imageUrl;
