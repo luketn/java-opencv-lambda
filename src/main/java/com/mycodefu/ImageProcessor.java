@@ -32,38 +32,42 @@ public class ImageProcessor {
         return encodedImage;
     }
 
+    /**
+     * OpenCV splits the image into channels in BGR order.
+     * This method creates a new image with the blue, green, and red channels side by side.
+     */
     private static Mat processGreenBlueRedSplit(Mat image) {
         int rows = image.rows();
         int cols = image.cols();
 
         // Get a Mat for each channel
-        Mat greenChannel = new Mat();
-        Core.extractChannel(image, greenChannel, 0);
         Mat blueChannel = new Mat();
-        Core.extractChannel(image, blueChannel, 1);
+        Core.extractChannel(image, blueChannel, 0);
+        Mat greenChannel = new Mat();
+        Core.extractChannel(image, greenChannel, 1);
         Mat redChannel = new Mat();
         Core.extractChannel(image, redChannel, 2);
 
         // Create a combined image 3x as wide copy each channel side by side (grayscale)
         Mat combinedImage = new Mat(rows, cols * 3, CvType.CV_8UC1);
         Mat roi1 = combinedImage.submat(new Rect(0, 0, cols, rows));
-        greenChannel.copyTo(roi1);
+        blueChannel.copyTo(roi1);
         Mat roi2 = combinedImage.submat(new Rect(cols, 0, cols, rows));
-        blueChannel.copyTo(roi2);
+        greenChannel.copyTo(roi2);
         Mat roi3 = combinedImage.submat(new Rect(cols * 2, 0, cols, rows));
         redChannel.copyTo(roi3);
 
         // Add text labels to the top left of each color channel
         Scalar color = new Scalar(255, 255, 255); // White color for text
-        int fontFace = Imgproc.FONT_HERSHEY_SIMPLEX;
+        int fontFace = Imgproc.FONT_HERSHEY_TRIPLEX;
         double fontScale = 1.0;
         int thickness = 2;
         Point org1 = new Point(10, 30);
         Point org2 = new Point(cols + 10, 30);
         Point org3 = new Point(cols * 2 + 10, 30);
 
-        Imgproc.putText(combinedImage, "Green", org1, fontFace, fontScale, color, thickness);
-        Imgproc.putText(combinedImage, "Blue", org2, fontFace, fontScale, color, thickness);
+        Imgproc.putText(combinedImage, "Blue", org1, fontFace, fontScale, color, thickness);
+        Imgproc.putText(combinedImage, "Green", org2, fontFace, fontScale, color, thickness);
         Imgproc.putText(combinedImage, "Red", org3, fontFace, fontScale, color, thickness);
 
         return combinedImage;
