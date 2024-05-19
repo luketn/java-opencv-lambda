@@ -46,13 +46,16 @@ public class ImageProcessor {
         Mat hsvImage = new Mat();
         Imgproc.cvtColor(image, hsvImage, Imgproc.COLOR_BGR2HSV);
 
-        // Define a narrower range of orange color in HSV
+        // Define a narrow range of orange color in HSV
         Scalar lowerOrange = new Scalar(8, 150, 100);
         Scalar upperOrange = new Scalar(18, 255, 255);
 
         // Threshold the HSV image to get only orange colors
         Mat mask = new Mat();
         Core.inRange(hsvImage, lowerOrange, upperOrange, mask);
+
+        // Create a copy of the mask before applying morphology
+        Mat maskBeforeMorphology = mask.clone();
 
         // Perform morphological operations to remove noise
         Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5));
@@ -70,12 +73,12 @@ public class ImageProcessor {
         for (MatOfPoint contour : contours) {
             double area = Imgproc.contourArea(contour);
             if (area > maxArea) {
-                maxArea = area;
-                largestContour = contour;
+                    maxArea = area;
+                    largestContour = contour;
             }
         }
 
-        // If a largest contour is found, draw a circle around it
+        // If a contour is found, draw a circle around it
         Point center = new Point();
         if (largestContour != null) {
             // Find the minimum enclosing circle of the largest contour
@@ -116,30 +119,40 @@ public class ImageProcessor {
             Imgproc.putText(legend, text, new Point(5, 8), Imgproc.FONT_HERSHEY_SIMPLEX, 0.3, white, 1, Imgproc.LINE_AA);
         }
         // Overlay the legend on the original image
-        Mat roi = image.submat(new Rect(legendX, legendY, legendWidth, legendHeight));
-        legend.copyTo(roi);
+        Mat legendAreaOfImage = image.submat(new Rect(legendX, legendY, legendWidth, legendHeight));
+        legend.copyTo(legendAreaOfImage);
 
 
 
-        // Create a 3-column wide image
-        Mat result = new Mat(image.rows(), image.cols() * 3, CvType.CV_8UC3);
+        // Create a 4-column wide image
+        Mat result = new Mat(image.rows(), image.cols() * 4, CvType.CV_8UC3);
 
         // Place the current image on the left
-        Mat leftROI = result.submat(new Rect(0, 0, image.cols(), image.rows()));
-        image.copyTo(leftROI);
+        Mat firstPanel = result.submat(new Rect(0, 0, image.cols(), image.rows()));
+        image.copyTo(firstPanel);
 
-        // Place the orange mask in the middle
-        Mat maskColorized = new Mat();
-        Imgproc.cvtColor(mask, maskColorized, Imgproc.COLOR_GRAY2BGR);
-        Mat middleROI = result.submat(new Rect(image.cols(), 0, image.cols(), image.rows()));
-        maskColorized.copyTo(middleROI);
+        // Place the mask before morphology in the second panel
+        Mat maskBeforeMorphologyColorized = new Mat();
+        Imgproc.cvtColor(maskBeforeMorphology, maskBeforeMorphologyColorized, Imgproc.COLOR_GRAY2BGR);
+        Mat secondPanel = result.submat(new Rect(image.cols(), 0, image.cols(), image.rows()));
+        maskBeforeMorphologyColorized.copyTo(secondPanel);
 
-        // Add title "Orange Mask" to the mask image
+        // Add title "Mask Before Morphology" to the second panel
         Scalar white = new Scalar(230, 230, 200);
-        Imgproc.putText(result, "Orange Mask", new Point(image.cols() + 5, 15),
+        Imgproc.putText(result, "Orange Mask (Before Morphology)", new Point(image.cols() + 5, 15),
                 Imgproc.FONT_HERSHEY_SIMPLEX, 0.4, white, 1, Imgproc.LINE_AA);
 
-        // Place the contours detected on the right
+        // Place the orange mask in the third panel
+        Mat maskColorized = new Mat();
+        Imgproc.cvtColor(mask, maskColorized, Imgproc.COLOR_GRAY2BGR);
+        Mat thirdPanel = result.submat(new Rect(image.cols() * 2, 0, image.cols(), image.rows()));
+        maskColorized.copyTo(thirdPanel);
+
+        // Add title "Orange Mask" to the third panel
+        Imgproc.putText(result, "Orange Mask", new Point(image.cols() * 2 + 5, 15),
+                Imgproc.FONT_HERSHEY_SIMPLEX, 0.4, white, 1, Imgproc.LINE_AA);
+
+        // Place the contours detected on the right (fourth panel)
         Mat contoursImage = Mat.zeros(image.size(), CvType.CV_8UC3);
         Scalar orange = new Scalar(0, 165, 255);
         for (MatOfPoint contour : contours) {
@@ -149,12 +162,13 @@ public class ImageProcessor {
                 Imgproc.drawContours(contoursImage, Collections.singletonList(contour), -1, white, 2);
             }
         }
-        Mat rightROI = result.submat(new Rect(image.cols() * 2, 0, image.cols(), image.rows()));
-        contoursImage.copyTo(rightROI);
+        Mat fourthPanel = result.submat(new Rect(image.cols() * 3, 0, image.cols(), image.rows()));
+        contoursImage.copyTo(fourthPanel);
 
-        // Add title "Contours Found" to the contours image
-        Imgproc.putText(result, "Contours Found", new Point(image.cols() * 2 + 5, 15),
+        // Add title "Contours Found" to the fourth panel
+        Imgproc.putText(result, "Contours Found", new Point(image.cols() * 3 + 5, 15),
                 Imgproc.FONT_HERSHEY_SIMPLEX, 0.4, white, 1, Imgproc.LINE_AA);
+
 
         return result;
     }
