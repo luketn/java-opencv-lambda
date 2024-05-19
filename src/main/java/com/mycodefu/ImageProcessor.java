@@ -4,7 +4,12 @@ import nu.pattern.OpenCV;
 import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.objdetect.CascadeClassifier;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Base64;
 
 public class ImageProcessor {
@@ -15,6 +20,7 @@ public class ImageProcessor {
     public enum Mode {
         Grayscale,
         GreenBlueRedSplit,
+        FaceDetection,
     }
 
     public static String processImage(String encodedInputImage, Mode mode) {
@@ -24,12 +30,50 @@ public class ImageProcessor {
         Mat result = switch (mode) {
             case Grayscale -> processGrayscale(image);
             case GreenBlueRedSplit -> processGreenBlueRedSplit(image);
+            case FaceDetection -> processFaceDetection(image);
         };
 
         MatOfByte matOfByte = new MatOfByte();
         Imgcodecs.imencode(".png", result, matOfByte);
         String encodedImage = Base64.getEncoder().encodeToString(matOfByte.toArray());
         return encodedImage;
+    }
+
+    /**
+     * Detect faces in an image using a Haar Cascade Classifier.
+     * Ref: https://docs.opencv.org/4.9.0/dc/d88/tutorial_traincascade.html
+     */
+    private static Mat processFaceDetection(Mat image) {
+        CascadeClassifier faceCascade = getFaceClassifier();
+
+        MatOfRect faceDetections = new MatOfRect();
+        faceCascade.detectMultiScale(image, faceDetections);
+
+        for (Rect rect : faceDetections.toArray()) {
+            Imgproc.rectangle(image, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new Scalar(0, 255, 0));
+        }
+
+        return image;
+    }
+
+    private static CascadeClassifier FACE_CLASSIFIER = null;
+    private static CascadeClassifier getFaceClassifier() {
+        if (FACE_CLASSIFIER == null) {
+            String tempPath = System.getProperty("java.io.tmpdir");
+            Path faceCascadePath = Path.of(tempPath, "haarcascade_frontalface_default.xml");
+            if (!faceCascadePath.toFile().exists()) {
+                //Copy the file to the temp path
+                try (InputStream is = ImageProcessor.class.getResourceAsStream("/haarcascade_frontalface_default.xml")) {
+                    Files.copy(is, faceCascadePath);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            CascadeClassifier faceCascade = new CascadeClassifier();
+            faceCascade.load(faceCascadePath.toString());
+            FACE_CLASSIFIER = faceCascade;
+        }
+        return FACE_CLASSIFIER;
     }
 
     /**
