@@ -1,6 +1,42 @@
 # OpenCV and Java on AWS Lambda
 This is an example of using OpenCV with Java on AWS Lambda.
 
+## Getting Setup
+
+### Prerequisites
+Build and test locally:
+- Java 21+
+- Maven
+- Docker
+
+Deploy to AWS:
+- NodeJS 20+
+- AWS Credentials
+
+### Unit tests
+```shell
+mvn test
+```
+
+### Package the application (maven shade)
+```shell
+mvn package
+```
+
+### Run the application locally
+Run the static void main web server:
+```
+com.mycodefu.LocalRunner.main();
+```
+Then navigate to http://localhost:8001/ in your browser.
+
+### Deploy the application to AWS
+```shell
+./build-deploy.sh
+```
+(you might need to adjust the profile used - I use the 'personal' profile)
+
+## Why?
 #### Why OpenCV?
 OpenCV is a powerful computer vision library that is widely used
 in industry and academia. It is a great tool for image processing
