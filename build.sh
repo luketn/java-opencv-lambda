@@ -1,3 +1,5 @@
+set -e
+
 mvn clean package
 rm -rf ./temp-build
 mkdir temp-build
