@@ -3,24 +3,55 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Webcam Video Feed</title>
+    <title>Java OpenCV Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #1E1F22;
+            color: #BCBEC4;
+        }
+        h4 {
+            margin-bottom: 0;
+            margin-left: 5px
+        }
+        td {
+            vertical-align: top;
+        }
+        video {
+            border: 1px solid darkmagenta;
+        }
+        img {
+            border: 1px solid darkmagenta;
+            min-width: 300px;
+            min-height: 200px;
+        }
+    </style>
 </head>
 
 <body>
-    <h1>Webcam Live Feed</h1>
-    <video id="webcam" autoplay playsinline></video>
-    <h1>Processed Image</h1>
+    <h4>Webcam Live Feed</h4>
+    <table>
+        <tr>
+            <td><video id="webcam" autoplay playsinline></video></td>
+            <td>
+                <h4>Mode</h4>
+                <input type="radio" id="none" name="mode" value="None" checked>
+                <label for="none">None</label><br>
+                <input type="radio" id="grayscale" name="mode" value="Grayscale">
+                <label for="grayscale">Grayscale</label><br>
+                <input type="radio" id="greenBlueRedSplit" name="mode" value="GreenBlueRedSplit">
+                <label for="greenBlueRedSplit">Green-Blue-Red Split</label><br>
+                <input type="radio" id="faceDetection" name="mode" value="FaceDetection">
+                <label for="faceDetection">Face Detection</label><br>
+                <input type="radio" id="mandarin" name="mode" value="Mandarin">
+                <label for="mandarin">Mandarin Detection</label>
+            </td>
+        </tr>
+    </table>
+
+    <h4>OpenCV Processed Image</h4>
     <img id="processed" src="">
-    <br />
-    <input type="checkbox" id="pause" name="Pause" value="Pause" checked />
-    <label for="pause">Pause</label>
-    <!-- dropdown for mode query string parameter with options Grayscale, GreenBlueRedSplit -->
-    <select id="mode" name="mode">
-        <option value="Grayscale">Grayscale</option>
-        <option value="GreenBlueRedSplit">Green-Blue-Red Split</option>
-        <option value="FaceDetection">Face Detection</option>
-        <option value="Mandarin">Mandarin Detection</option>
-    </select>
 
 
     <script>
@@ -31,6 +62,7 @@
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { width: { max: 300 }, height: { max: 300 } } });
                 video.srcObject = stream;
                 video.play();
+
                 return true;
             } catch (error) {
                 console.error('Error accessing webcam:', error);
@@ -80,13 +112,17 @@
                     // Replace 'yourWebServiceURL' with the URL of your web service
                     try {
                         //get the mode value
-                        const mode = document.getElementById('mode').value;
+                        const selectedMode = document.querySelector('input[name="mode"]:checked').value;
+                        if (selectedMode === 'None') {
+                            resolve();
+                            return;
+                        }
+
                         // console.log(`Mode: ${mode}`);
-                        const response = await fetchWithRetry(`/?mode=${mode}`, {
+                        const response = await fetchWithRetry(`/?mode=${selectedMode}`, {
                             method: 'POST',
                             body: blob
                         });
-
 
                         const imageBlob = await response.blob();
                         const imageUrl = URL.createObjectURL(imageBlob);
@@ -103,13 +139,19 @@
         }
 
         async function startProcessingLoop() {
-            const pauseCheckbox = document.getElementById('pause');
+            const noneRadio = document.getElementById('none');
             const isWebcamSetup = await setupWebcam();
             if (isWebcamSetup) {
                 while (true) {
-                    if (pauseCheckbox.checked) {
+                    if (noneRadio.checked) {
                         await new Promise((resolve) => {
-                            pauseCheckbox.onchange = resolve;
+                            document.getElementsByName('mode')
+                                .forEach((radio) => {
+                                    if (radio.id !== 'none') {
+                                        radio.onchange = resolve;
+                                    }
+                                });
+
                         });
                     } else {
                         await processFrame();
