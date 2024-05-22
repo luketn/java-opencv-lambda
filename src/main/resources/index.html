@@ -7,9 +7,8 @@
 </head>
 
 <body>
-
     <h1>Webcam Live Feed</h1>
-    <video id="webcam" autoplay></video>
+    <video id="webcam" autoplay playsinline></video>
     <h1>Processed Image</h1>
     <img id="processed" src="">
     <br />
@@ -31,6 +30,7 @@
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { width: { max: 300 }, height: { max: 300 } } });
                 video.srcObject = stream;
+                video.play();
                 return true;
             } catch (error) {
                 console.error('Error accessing webcam:', error);
