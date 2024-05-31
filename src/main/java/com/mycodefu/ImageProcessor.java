@@ -22,6 +22,7 @@ public class ImageProcessor {
         GreenBlueRedSplit,
         FaceDetection,
         Mandarin,
+        TensorFlow,
     }
 
     public static String processImage(String encodedInputImage, Mode mode) {
@@ -33,12 +34,18 @@ public class ImageProcessor {
             case GreenBlueRedSplit -> processGreenBlueRedSplit(image);
             case FaceDetection -> processFaceDetection(image);
             case Mandarin -> processMandarin(image);
+            case TensorFlow -> processTensorFlow(image);
         };
 
         MatOfByte matOfByte = new MatOfByte();
         Imgcodecs.imencode(".png", result, matOfByte);
         String encodedImage = Base64.getEncoder().encodeToString(matOfByte.toArray());
         return encodedImage;
+    }
+
+    private static Mat processTensorFlow(Mat image) {
+        //todo: implement tensorflow
+        return image;
     }
 
     private static Mat processMandarin(Mat image) {
