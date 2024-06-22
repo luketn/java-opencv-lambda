@@ -1,6 +1,6 @@
 set -e
 
-mvn clean package
+mvn clean package --activate-profiles linux-aarch64
 rm -rf ./temp-build
 mkdir temp-build
 cp target/java-opencv-lambda.jar ./temp-build/
@@ -10,6 +10,7 @@ unzip java-opencv-lambda.zip
 rm java-opencv-lambda.zip
 
 cd ..
+rm -rf ./docker/code
 mkdir -p ./docker/code
 cp -r ./temp-build/* ./docker/code/
 rm -rf ./temp-build

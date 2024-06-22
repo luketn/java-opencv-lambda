@@ -12,11 +12,81 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
-        <maven.shade.plugin.version>3.5.3</maven.shade.plugin.version>
-        <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
-        <exec-maven-plugin.version>1.6.0</exec-maven-plugin.version>
     </properties>
+
+    <profiles>
+        <profile>
+            <id>default</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <opencv.native.include>nu/pattern/opencv/**</opencv.native.include>
+            </properties>
+        </profile>
+        <profile>
+            <id>windows-x86_64</id>
+            <activation>
+                <os>
+                    <family>windows</family>
+                    <arch>amd64</arch>
+                </os>
+            </activation>
+            <properties>
+                <opencv.native.include>nu/pattern/opencv/windows/x86_64/**</opencv.native.include>
+            </properties>
+        </profile>
+        <profile>
+            <id>mac-x86_64</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                    <arch>x86_64</arch>
+                </os>
+            </activation>
+            <properties>
+                <opencv.native.include>nu/pattern/opencv/osx/x86_64/**</opencv.native.include>
+            </properties>
+        </profile>
+        <profile>
+            <id>mac-aarch64</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                    <arch>aarch64</arch>
+                </os>
+            </activation>
+            <properties>
+                <opencv.native.include>nu/pattern/opencv/osx/ARMv8/**</opencv.native.include>
+            </properties>
+        </profile>
+        <profile>
+            <id>linux-x86_64</id>
+            <activation>
+                <os>
+                    <family>unix</family>
+                    <name>linux</name>
+                    <arch>amd64</arch>
+                </os>
+            </activation>
+            <properties>
+                <opencv.native.include>nu/pattern/opencv/linux/x86_64/**</opencv.native.include>
+            </properties>
+        </profile>
+        <profile>
+            <id>linux-aarch64</id>
+            <activation>
+                <os>
+                    <family>unix</family>
+                    <name>linux</name>
+                    <arch>aarch64</arch>
+                </os>
+            </activation>
+            <properties>
+                <opencv.native.include>nu/pattern/opencv/linux/ARMv8/**</opencv.native.include>
+            </properties>
+        </profile>
+    </profiles>
 
     <dependencies>
         <dependency>
@@ -29,7 +99,6 @@
             <artifactId>aws-lambda-java-core</artifactId>
             <version>1.2.3</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/com.amazonaws/aws-lambda-java-events -->
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-lambda-java-events</artifactId>
@@ -62,31 +131,42 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>${maven.compiler.plugin.version}</version>
+                <version>3.13.0</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
                 <configuration>
-                    <source>21</source>
-                    <target>21</target>
-                    <release>21</release>
+                    <archive>
+                        <manifest>
+                            <addClasspath>false</addClasspath>
+                            <mainClass>com.mycodefu.LocalRunner</mainClass>
+                        </manifest>
+                    </archive>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>${maven.shade.plugin.version}</version>
+                <version>3.5.3</version>
                 <configuration>
                     <createDependencyReducedPom>false</createDependencyReducedPom>
                     <finalName>java-opencv-lambda</finalName>
                     <filters>
                         <filter>
                             <artifact>*:*</artifact>
-                            <excludes>
-                                <exclude>nu/pattern/opencv/windows/**</exclude>
-                                <exclude>nu/pattern/opencv/linux/ARMv7/**</exclude>
-                                <exclude>nu/pattern/opencv/linux/x86_32/**</exclude>
-                                <exclude>nu/pattern/opencv/linux/x86_64/**</exclude>
-                                <exclude>nu/pattern/opencv/osx/x86_64/**</exclude>
-                                <exclude>nu/pattern/opencv/osx/ARMv8/**</exclude>
-                            </excludes>
+                            <includes>
+                                <include>**</include>
+                            </includes>
+                        </filter>
+                        <filter>
+                            <artifact>org.openpnp:opencv</artifact>
+                            <includes>
+                                <include>${opencv.native.include}</include>
+                                <include>org/**</include>
+                                <include>nu/pattern/*</include>
+                            </includes>
                         </filter>
                     </filters>
                 </configuration>
@@ -96,6 +176,9 @@
                         <goals>
                             <goal>shade</goal>
                         </goals>
+                        <configuration>
+                            <minimizeJar>true</minimizeJar>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
