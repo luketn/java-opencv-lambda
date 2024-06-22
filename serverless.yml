@@ -13,4 +13,4 @@ functions:
   image-process:
     url:
       cors: true
-    image: "204244381428.dkr.ecr.ap-southeast-2.amazonaws.com/java-opencv-lambda:${env:DOCKER_TAG}"
+    image: "204244381428.dkr.ecr.ap-southeast-2.amazonaws.com/java-opencv-lambda:${env:DOCKER_TAG, 'latest'}"
